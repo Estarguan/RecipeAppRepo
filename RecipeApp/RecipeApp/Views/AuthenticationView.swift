@@ -4,7 +4,7 @@ import OpenAISwift
 struct AuthenticationView: View {
     @State var country = "CA"
     @State var language = "en"
-
+    @State var isLanguageSelected = false
     var body: some View {
         NavigationStack {
             ZStack {
@@ -88,6 +88,11 @@ struct AuthenticationView: View {
     }
 }
 
+class AppSettings: ObservableObject {
+    @Published var selectedLanguage: String = "en"
+}
+
 #Preview {
     AuthenticationView()
+        .environmentObject(AppSettings())
 }
