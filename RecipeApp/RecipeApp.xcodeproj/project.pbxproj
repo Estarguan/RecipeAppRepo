@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1FD06AB12DA1EFEA000D6D0F /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 1FD06AB02DA1EFEA000D6D0F /* Supabase */; };
+		4A5798A22DA5604C0080B6BB /* OpenAISwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4A5798A12DA5604C0080B6BB /* OpenAISwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -40,6 +41,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4A5798A22DA5604C0080B6BB /* OpenAISwift in Frameworks */,
 				1FD06AB12DA1EFEA000D6D0F /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -92,6 +94,7 @@
 			name = RecipeApp;
 			packageProductDependencies = (
 				1FD06AB02DA1EFEA000D6D0F /* Supabase */,
+				4A5798A12DA5604C0080B6BB /* OpenAISwift */,
 			);
 			productName = RecipeApp;
 			productReference = 1FD06A502DA1B790000D6D0F /* RecipeApp.app */;
@@ -123,6 +126,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				1FD06AAE2DA1EFA9000D6D0F /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				4A5798A02DA5604C0080B6BB /* XCRemoteSwiftPackageReference "OpenAiSwift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1FD06A512DA1B790000D6D0F /* Products */;
@@ -364,6 +368,14 @@
 				minimumVersion = 2.5.1;
 			};
 		};
+		4A5798A02DA5604C0080B6BB /* XCRemoteSwiftPackageReference "OpenAiSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/adamrushy/OpenAiSwift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.4.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -371,6 +383,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1FD06AAE2DA1EFA9000D6D0F /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		4A5798A12DA5604C0080B6BB /* OpenAISwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4A5798A02DA5604C0080B6BB /* XCRemoteSwiftPackageReference "OpenAiSwift" */;
+			productName = OpenAISwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
