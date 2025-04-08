@@ -9,24 +9,16 @@ import SwiftUI
 
 struct MenuView: View {
     var body: some View {
-        NavigationView{
-            VStack{
-                HStack{
-                    Spacer()
-                    NavigationLink("Login",destination:LoginView())
-                    NavigationLink("Register",destination:RegisterView())
-                }
-                .padding(.trailing)
-                Spacer()
+        VStack{
                 VStack{
-                    Text("ChefBuddy")
+                    Text("FormFriend")
                         .font(.system(size:60))
                         .fontWeight(.bold)
                     
                     Button(action:{
                         //Switch to recipe Page
                     }){
-                        Text("Browse Recipes")
+                        Text("Start Prompt")
                             .font(.title)
                             .padding()
                             .foregroundStyle(.white)
@@ -38,7 +30,7 @@ struct MenuView: View {
                     }
                 }
                 Spacer()
-            }
+            
         }
     }
 }
