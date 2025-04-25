@@ -5,6 +5,7 @@ struct AuthenticationView: View {
     @State var country = "CA"
     @State var language = "en"
     @State var isLanguageSelected = false
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -28,13 +29,20 @@ struct AuthenticationView: View {
                     Image("PolarisLogo")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 250, height: 200) // Increased size of the logo
+                        .frame(width: 300, height: 250) // Increased size of the logo
                         .padding(.top, 50)
                         .padding(.bottom, 50)
 
                     Spacer()
                     
-                    // 2. Language Selection (Centered and clean)
+                    // 2. Subtitle under the logo
+
+                    Text("The #1 Form Filling Buddy!")
+                        .font(.custom("SFProText", size: 20)) // Using SF Pro Text for subtitle
+                        .fontWeight(.regular)
+                        .foregroundColor(Color("ColorBlue"))
+                        .padding(.bottom, 30)
+                    // 3. Language Selection (Centered and clean)
                     VStack {
                         Text("Select your language")
                             .font(.title2)
@@ -58,32 +66,39 @@ struct AuthenticationView: View {
                     .padding(.horizontal, 20)
                     
                     // 4. Enter Button (Navigate to MainView)
-                    Button(action: {
-                        // Proceed to MainView when button is pressed
-                        isLanguageSelected = true
-                    }) {
-                        Text("Enter")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(Color("ColorWhite"))
-                            .frame(width: 250, height: 50)
-                            .background(Color("ColorBlue"))
-                            .cornerRadius(10)
-                            .padding(.bottom, 30)
-                            .animation(.easeInOut, value: isLanguageSelected)
-                    }
-                    
-                    .disabled(language.isEmpty) // Disable the button if no language is selected
-                    
-                    Spacer()
-                        .padding(.bottom, 30)
-                }
-                .padding(.horizontal, 20)
-                // Add a NavigationLink that activates when language is selected
-                NavigationLink(destination: MainView(), isActive: $isLanguageSelected) {
-                    EmptyView()
-                }
-            }
+
+                       Button(action: {
+
+                           // Proceed to MainView when button is pressed
+
+                           isLanguageSelected = true
+
+                       }) {
+
+                           Text("Enter")
+                               .font(.title2)
+                               .fontWeight(.bold)
+                               .foregroundColor(Color("ColorWhite"))
+                               .frame(width: 250, height: 50)
+                               .background(isLanguageSelected ? Color("ColorLightGray") : Color("ColorBlue"))
+                               .cornerRadius(10)
+                               .padding(.bottom, 30)
+                               .animation(.easeInOut, value: isLanguageSelected)
+
+                       }
+                       .disabled(language.isEmpty) // Disable the button if no language is selected
+                       Spacer()
+                           .padding(.bottom, 30)
+                   }
+                   .padding(.horizontal, 20)
+                   // Use navigationDestination to navigate when the button is clicked
+                   NavigationLink("", destination: MainView())
+                       .isDetailLink(false)
+                       .navigationDestination(isPresented: $isLanguageSelected) {
+                           MenuView()
+                       }
+
+               }
         }
     }
 }
