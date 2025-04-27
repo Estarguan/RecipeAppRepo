@@ -5,7 +5,7 @@ struct HelpBot: View {
     @State private var response: String = ""
     @State private var isLoading: Bool = false  // Track loading state
 
-    let openAI = OpenAISwift(config: OpenAISwift.Config.makeDefaultOpenAI(apiKey: "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"))
+//    let openAI = OpenAISwift(config: OpenAISwift.Config.makeDefaultOpenAI(apiKey: "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"))
 
     var body: some View {
         Group {
