@@ -1,85 +1,102 @@
 import SwiftUI
-
 import OpenAISwift
 
-
-
 struct CreateAccountView: View {
-    @State var language = "en"
-    @State var isLanguageSelected = false
+    @EnvironmentObject var appSettings: AppSettings
+
+    // Translated text states
+    @State private var titleText: String = "Create an Account"
+    @State private var registerText: String = "Register"
+    @State private var loginText: String = "Login"
 
     var body: some View {
         NavigationStack {
             ZStack {
-                // Background color
                 Color("ColorLightGray")
-                    .edgesIgnoringSafeArea(.all)  // Ensure the background stretches across the entire screen
+                    .edgesIgnoringSafeArea(.all)
 
                 VStack {
-                    // Top section with logo and Canadian flag
+                    // Logo + Flag
                     HStack {
                         Image("PolarisSymbol")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 40, height: 40) // Logo size
+                            .frame(width: 40, height: 40)
                             .padding(.top, 10)
+
                         Spacer()
+
                         Image("CanadianFlag")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 40, height: 30) // Flag size
+                            .frame(width: 40, height: 30)
                             .padding(.top, 10)
                     }
                     .padding(.horizontal, 40)
-                    // Title with really bold text
-                    Text("Create an Account")
+
+                    // Title
+                    Text(titleText)
                         .font(.system(size: 40, weight: .heavy))
                         .foregroundColor(Color("ColorBlue"))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .truncationMode(.tail)
                         .padding(.top, 20)
+
                     Spacer()
-                    // Phone and Person images side by side with no space between
-                    HStack(spacing: 20) { // Remove any space between the images
+
+                    // Images
+                    HStack(spacing: 20) {
                         Image("Phone")
                             .resizable()
                             .scaledToFit()
                             .frame(height: 340)
+
                         Image("Person")
                             .resizable()
                             .scaledToFit()
                             .frame(height: 210)
                             .padding(.trailing, 10)
-
                     }
                     .padding(.top, 30)
+
                     Spacer()
-                    // ZStack to overlay the buttons over the PaperThing
-                    ZStack(alignment: .center) { // Ensures the buttons are centered
-                        // PaperThing background image
+
+                    // Buttons over Paper background
+                    ZStack(alignment: .center) {
                         Image("PaperThing")
                             .resizable()
-                            .scaledToFill()  // Use scaledToFill to make the image stretch to fill the width
-                            .frame(maxWidth: .infinity, maxHeight: 260)  // Ensure it takes up the full width
-                            .clipped() // Optional: Ensures no part of the image exceeds the bounds
+                            .scaledToFill()
+                            .frame(maxWidth: .infinity, maxHeight: 260)
+                            .clipped()
+
                         VStack {
-                            // Register and Login buttons
-                            NavigationLink(destination: RegisterView()){
-                                Text("Register")
+                            NavigationLink(destination: RegisterView()) {
+                                Text(registerText)
                                     .font(.title2)
                                     .fontWeight(.bold)
                                     .foregroundColor(Color("ColorWhite"))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
+                                    .truncationMode(.tail)
                                     .frame(width: 250, height: 50)
                                     .background(Color("ColorBlue"))
                                     .cornerRadius(10)
                                     .padding(.bottom, 20)
                             }
-                            .contentShape(Rectangle())
-                            NavigationLink("Login", destination: LoginView())
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(Color("ColorBlue"))
-                                .frame(width: 250, height: 50)
-                                .background(Color("ColorWhite"))
-                                .cornerRadius(10)
+
+                            NavigationLink(destination: LoginView()) {
+                                Text(loginText)
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(Color("ColorBlue"))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
+                                    .truncationMode(.tail)
+                                    .frame(width: 250, height: 50)
+                                    .background(Color("ColorWhite"))
+                                    .cornerRadius(10)
+                            }
                         }
                     }
                     .padding(.top, 20)
@@ -87,13 +104,16 @@ struct CreateAccountView: View {
                 .padding(.horizontal, 20)
             }
         }
+        .task {
+            // Load translated text
+            titleText = await TranslationTool(text: "Create an Account", targetLanguage: appSettings.selectedLanguage)
+            registerText = await TranslationTool(text: "Register", targetLanguage: appSettings.selectedLanguage)
+            loginText = await TranslationTool(text: "Login", targetLanguage: appSettings.selectedLanguage)
+        }
     }
 }
 
-
-
 #Preview {
-
     CreateAccountView()
-
+        .environmentObject(AppSettings())
 }

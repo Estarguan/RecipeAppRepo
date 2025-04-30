@@ -1,364 +1,165 @@
-
-
 import SwiftUI
 
-
-
 struct MenuView: View {
-    @EnvironmentObject var appStore: AppStore  // Access the injected object
-    @State private var name: String = "Guest"  // Default to "Guest"
+    @EnvironmentObject var appStore: AppStore
+    @EnvironmentObject var appSettings: AppSettings
+
+    @State private var name: String = "Guest"
     @State private var isAuthenticated = false
-    @State private var isHomeActive: Bool = true  // To check if we are on the home page
 
-
+    // Translated text states
+    @State private var greetingStart: String = "Hello, "
+    @State private var signInText: String = "Sign in?"
+    @State private var addFormText: String = "+ Add Form"
+    @State private var extraHelpText: String = "Extra Help"
 
     var body: some View {
-
         NavigationStack {
-
-            ZStack(alignment: .top) {  // ZStack with alignment to manage placement
-
-                // Background color (light gray or something similar to match design)
-
+            ZStack(alignment: .top) {
                 Color("ColorLightGray")
+                    .edgesIgnoringSafeArea(.all)
 
-                    .edgesIgnoringSafeArea(.all)  // Ensure the background stretches across the entire screen
-
-
-
-                // Black Circular Area at the Top (only showing bottom third)
-
-                ZStack {
-
-                    // Create a large black circle with only the bottom third visible
-
-                    Circle()
-
-                        .fill(Color("ColorBlack"))
-
-                        .frame(width: 500, height: 500)
-
-                        .offset(y: -245)  // Move the circle down to show only the bottom third
-
-                    
-
-                    // White Circle behind the Polaris Symbol
-
-                    Circle()
-
-                        .fill(Color.white)
-
-                        .frame(width: 170, height: 170)
-
-                        .offset(y: -190)  // Position it so only the bottom third of the black circle is visible
-
-
-
-                    // Polaris symbol inside the circle
-
-                    VStack {
-
-                        Image("PolarisSymbol")
-
-                            .resizable()
-
-                            .scaledToFit()
-
-                            .frame(width: 120, height: 120)
-
-                            .offset(y: -132)
-
-
-
-                        Text("Polaris") // Title below the Polaris Symbol
-
-                            .font(.system(size: 40, weight: .heavy))
-
-                            .foregroundColor(Color("ColorLightGray"))
-
-                            .offset(y: -130)
-
+                // Top-right language display
+                VStack {
+                    HStack {
+                        Spacer()
+                        let locale = Locale(identifier: appSettings.selectedLanguage)
+                        Text(locale.localizedString(forLanguageCode: appSettings.selectedLanguage)?
+                            .capitalized ?? appSettings.selectedLanguage)
+                            .font(.footnote)
+                            .fontWeight(.medium)
+                            .foregroundColor(.white)
+                            .padding(.trailing, 20)
+                            .padding(.top, 60)
                     }
-
+                    Spacer()
                 }
 
-                .padding(.top, 40) // Adjust space from the top of the screen
+                // Top circular design
+                ZStack {
+                    Circle()
+                        .fill(Color("ColorBlack"))
+                        .frame(width: 500, height: 500)
+                        .offset(y: -245)
 
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 170, height: 170)
+                        .offset(y: -190)
 
+                    VStack {
+                        Image("PolarisSymbol")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 120, height: 120)
+                            .offset(y: -152)
 
-                // Black rounded rectangular bar with "Hello, Guest :)" and "Sign in?" button
+                        Text("Polaris")
+                            .font(.system(size: 40, weight: .heavy))
+                            .foregroundColor(Color("ColorLightGray"))
+                            .offset(y: -130)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .truncationMode(.tail)
+                    }
+                }
+                .padding(.top, 40)
 
+                // Greeting Bar
                 HStack {
-
-                    Text("Hello, ") // Static "Hello, "
-
+                    Text(greetingStart)
                         .font(.title2)
-
                         .fontWeight(.semibold)
-
                         .foregroundColor(Color("ColorWhite"))
-
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .truncationMode(.tail)
                         .padding(.leading, 20)
 
-
-
-                    Text(name) // Dynamic name, which is bold
-
+                    Text(name)
                         .font(.title2)
-
-                        .fontWeight(.bold)  // Bold for the "Guest"
-
+                        .fontWeight(.bold)
                         .foregroundColor(Color("ColorWhite"))
 
-
-
-                    Text(" :)") // Static ":)"
-
+                    Text(":)")
                         .font(.title2)
-
                         .fontWeight(.semibold)
-
                         .foregroundColor(Color("ColorWhite"))
-
                         .padding(.leading, 5)
 
-
-
                     Spacer()
 
-
-                    if !isAuthenticated{
+                    if !isAuthenticated {
                         NavigationLink(destination: CreateAccountView()) {
-
-                            Text("Sign in?")
-
+                            Text(signInText)
                                 .fontWeight(.semibold)
-
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                                .truncationMode(.tail)
                                 .padding(8)
-
                                 .background(Color("ColorBlue"))
-
                                 .foregroundColor(.white)
-
                                 .cornerRadius(10)
-
                                 .padding(.trailing, 20)
-
                         }
-
                     }
-                    
                 }
-
                 .frame(maxWidth: 380, minHeight: 50)
-
                 .background(RoundedRectangle(cornerRadius: 15).fill(Color("ColorBlack")))
+                .offset(y: 320)
 
-                .offset(y: 320) // Adjust the position of the greeting bar
-
-
-
-                // Action buttons below the greeting
-
+                // Action Buttons
                 VStack(spacing: 20) {
-
                     NavigationLink(destination: FormView()) {
-
-                        Text("+ Add Form")
-
+                        Text(addFormText)
                             .font(.system(size: 40, weight: .bold))
-
                             .foregroundColor(Color("ColorBlack"))
-
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .truncationMode(.tail)
                             .padding()
-
                             .frame(maxWidth: 360, minHeight: 80)
-
                             .background(RoundedRectangle(cornerRadius: 25).fill(Color("ColorDarkGray")))
-
                     }
-
-
 
                     NavigationLink(destination: HelpBot()) {
-
-                        Text("Extra Help")
-
+                        Text(extraHelpText)
                             .font(.system(size: 40, weight: .bold))
-
                             .foregroundColor(Color("ColorBlack"))
-
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .truncationMode(.tail)
                             .padding()
-
                             .frame(maxWidth: 360, minHeight: 80)
-
                             .background(RoundedRectangle(cornerRadius: 25).fill(Color("ColorDarkGray")))
-
                     }
-
                 }
-
-                .padding(.horizontal, 30) // Horizontal padding for action buttons
-
-                .offset(y: 400)  // Adjust the position of the action buttons
-
-
-
-                // Bottom Navigation Bar (rectangular blue bar with icons and text)
-
-                HStack {
-
-                    // Home Icon with Text
-
-                    VStack {
-
-                        Button(action: {
-
-                            // Do nothing as we are already on the Home page
-
-                        }) {
-
-                            Image(systemName: "house.fill")
-
-                                .font(.system(size: 25))
-
-                                .foregroundColor(isHomeActive ? Color("ColorBlack") : .white) // Highlight the home icon
-
-                                .padding(12)
-
-                        }
-
-                        Text("Home")
-
-                            .font(.footnote)
-
-                            .foregroundColor(isHomeActive ? Color("ColorBlack") : .white) // Highlight the "Home" text
-
-                    }
-
-
-
-                    Spacer()
-
-
-
-                    // Saved Icon with Text
-
-                    VStack {
-
-                        NavigationLink(destination: SavedView()) {
-
-                            Image(systemName: "star.fill")
-
-                                .font(.system(size: 25))
-
-                                .foregroundColor(.white)
-
-                                .padding(12)
-
-                        }
-
-                        Text("Saved")
-
-                            .font(.footnote)
-
-                            .foregroundColor(.white)
-
-                    }
-
-
-
-                    Spacer()
-
-
-
-                    // Help Icon with Text (New Help Button)
-
-                    VStack {
-
-                        NavigationLink(destination: HelpBot()) { // Link to HelpBot
-
-                            Image(systemName: "questionmark.circle.fill")
-
-                                .font(.system(size: 25))
-
-                                .foregroundColor(.white)
-
-                                .padding(12)
-
-                        }
-
-                        Text("Help")
-
-                            .font(.footnote)
-
-                            .foregroundColor(.white)
-
-                    }
-
-
-
-                    Spacer()
-
-
-
-                    // Profile Icon with Text
-
-                    VStack {
-
-                        NavigationLink(destination: ProfileView()) {
-
-                            Image(systemName: "person.fill")
-
-                                .font(.system(size: 25))
-
-                                .foregroundColor(.white)
-
-                                .padding(12)
-
-                        }
-
-                        Text("Profile")
-
-                            .font(.footnote)
-
-                            .foregroundColor(.white)
-
-                    }
-
-                }
-
-                .frame(maxWidth: 350) // Limit the width of the bar
-
-                .padding(.horizontal, 20) // Add padding to the sides
-
-                .padding(.vertical, 10)
-
-                .background(RoundedRectangle(cornerRadius: 25).fill(Color("ColorBlue")))
-
-                .shadow(radius: 5)
-
-                .offset(y: 630) // Adjust position of the bottom navigation bar
-
+                .padding(.horizontal, 30)
+                .offset(y: 400)
+
+                // Bottom Navigation Bar
+                NavigationBar(selectedTab: .home)
+                    .offset(y: 630)
             }
-
-        }.task {
+        }
+        .task {
             for await state in supabase.auth.authStateChanges {
                 if [.initialSession, .signedIn, .signedOut].contains(state.event) {
                     isAuthenticated = state.session != nil
                 }
             }
         }
-
+        .task {
+            greetingStart = await TranslationTool(text: "Hello, ", targetLanguage: appSettings.selectedLanguage)
+            signInText = await TranslationTool(text: "Sign in?", targetLanguage: appSettings.selectedLanguage)
+            addFormText = await TranslationTool(text: "+ Add Form", targetLanguage: appSettings.selectedLanguage)
+            extraHelpText = await TranslationTool(text: "Extra Help", targetLanguage: appSettings.selectedLanguage)
+        }
     }
-
 }
-
-
 
 #Preview {
-
     MenuView()
-
+        .environmentObject(AppSettings())
+        .environmentObject(AppStore())
 }
-
