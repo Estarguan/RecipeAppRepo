@@ -1,110 +1,128 @@
 import SwiftUI
 import OpenAISwift
+import Translation
 
 struct AuthenticationView: View {
-    @State var country = "CA"
-    @State var language = "en"
-    @State var isLanguageSelected = false
+    @EnvironmentObject var appSettings: AppSettings
+    @State private var language = "en"
+    @State private var isLanguageSelected = false
+
+    // Translated UI strings
+    @State private var subtitleText: String = "The #1 Form Filling Buddy!"
+    @State private var selectLanguageText: String = "Select your language"
+    @State private var enterButtonText: String = "Enter"
+
+    // Supported languages by Apple Translation Framework (as of iOS 17.4)
+    let supportedLanguages: [String] = [
+        "en", "es", "fr", "de", "it", "pt", "zh", "ja", "ko", "ru", "ar", "hi"
+    ]
 
     var body: some View {
         NavigationStack {
             ZStack {
-                // Background color
                 Color("ColorWhite")
                     .edgesIgnoringSafeArea(.all)
 
                 VStack {
-                    
-                    // 3. Canadian Flag in top-right corner
+                    // Top flag
                     HStack {
                         Spacer()
                         Image("CanadianFlag")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 80, height: 50) // Larger flag size
+                            .frame(width: 80, height: 50)
                             .padding(.top, 40)
                     }
-                    
-                    // 1. Logo (Polaris) - Larger size
+
+                    // Logo
                     Image("PolarisLogo")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 300, height: 250) // Increased size of the logo
+                        .frame(width: 300, height: 250)
                         .padding(.top, 50)
                         .padding(.bottom, 50)
 
                     Spacer()
-                    
-                    // 2. Subtitle under the logo
 
-                    Text("The #1 Form Filling Buddy!")
-                        .font(.custom("SFProText", size: 20)) // Using SF Pro Text for subtitle
+                    // Subtitle
+                    Text(subtitleText)
+                        .font(.custom("SFProText", size: 20))
                         .fontWeight(.regular)
                         .foregroundColor(Color("ColorBlue"))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .truncationMode(.tail)
                         .padding(.bottom, 30)
-                    // 3. Language Selection (Centered and clean)
+
+                    // Language Picker
                     VStack {
-                        Text("Select your language")
+                        Text(selectLanguageText)
                             .font(.title2)
                             .fontWeight(.medium)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .truncationMode(.tail)
                             .padding(.bottom, 10)
 
                         Picker("Select a language", selection: $language) {
-                            ForEach(NSLocale.isoLanguageCodes, id: \.self) { languageCode in
-                                Text(Locale.current.localizedString(forLanguageCode: languageCode) ?? "")
+                            ForEach(supportedLanguages, id: \.self) { languageCode in
+                                let locale = Locale(identifier: languageCode)
+                                Text(locale.localizedString(forLanguageCode: languageCode)?.capitalized ?? languageCode)
                                     .font(.system(size: 18))
                             }
                         }
-                        .pickerStyle(MenuPickerStyle()) // Clean dropdown style
+                        .pickerStyle(MenuPickerStyle())
                         .tint(Color("ColorBlack"))
-                        .frame(width: 250) // Adjust width to make it more centered
+                        .frame(width: 250)
                         .padding()
-                        .background(RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color("ColorBlack"), lineWidth: 2)
-                            .background(Color("ColorLightGray")))
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color("ColorBlack"), lineWidth: 2)
+                                .background(Color("ColorLightGray"))
+                        )
                     }
                     .padding(.horizontal, 20)
-                    
-                    // 4. Enter Button (Navigate to MainView)
 
-                       Button(action: {
+                    // Enter Button
+                    Button(action: {
+                        appSettings.selectedLanguage = language
+                        UserDefaults.standard.set(language, forKey: "selectedLanguage")
+                        isLanguageSelected = true
+                    }) {
+                        Text(enterButtonText)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(Color("ColorWhite"))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .truncationMode(.tail)
+                            .frame(width: 250, height: 50)
+                            .background(isLanguageSelected ? Color("ColorLightGray") : Color("ColorBlue"))
+                            .cornerRadius(10)
+                            .padding(.bottom, 30)
+                            .animation(.easeInOut, value: isLanguageSelected)
+                    }
+                    .disabled(language.isEmpty)
 
-                           // Proceed to MainView when button is pressed
+                    Spacer()
+                        .padding(.bottom, 30)
+                }
+                .padding(.horizontal, 20)
 
-                           isLanguageSelected = true
-
-                       }) {
-
-                           Text("Enter")
-                               .font(.title2)
-                               .fontWeight(.bold)
-                               .foregroundColor(Color("ColorWhite"))
-                               .frame(width: 250, height: 50)
-                               .background(isLanguageSelected ? Color("ColorLightGray") : Color("ColorBlue"))
-                               .cornerRadius(10)
-                               .padding(.bottom, 30)
-                               .animation(.easeInOut, value: isLanguageSelected)
-
-                       }
-                       .disabled(language.isEmpty) // Disable the button if no language is selected
-                       Spacer()
-                           .padding(.bottom, 30)
-                   }
-                   .padding(.horizontal, 20)
-                   // Use navigationDestination to navigate when the button is clicked
-                   NavigationLink("", destination: MainView())
-                       .isDetailLink(false)
-                       .navigationDestination(isPresented: $isLanguageSelected) {
-                           MenuView()
-                       }
-
-               }
+                // Navigation
+                NavigationLink("", destination: MainView())
+                    .isDetailLink(false)
+                    .navigationDestination(isPresented: $isLanguageSelected) {
+                        MenuView()
+                    }
+            }
+        }
+        .task {
+            subtitleText = await TranslationTool(text: "The #1 Form Filling Buddy!", targetLanguage: appSettings.selectedLanguage)
+            selectLanguageText = await TranslationTool(text: "Select your language", targetLanguage: appSettings.selectedLanguage)
+            enterButtonText = await TranslationTool(text: "Enter", targetLanguage: appSettings.selectedLanguage)
         }
     }
-}
-
-class AppSettings: ObservableObject {
-    @Published var selectedLanguage: String = "en"
 }
 
 #Preview {
