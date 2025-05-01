@@ -80,12 +80,9 @@ struct MainView: View {
     }
 }
 
-class AppStore: ObservableObject {
-    @Published var isAuthenitcated: Bool = false
-}
+
 
 #Preview {
     MainView()
         .environmentObject(AppSettings())
-        .environmentObject(AppStore())
 }

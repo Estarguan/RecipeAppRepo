@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct MenuView: View {
-    @EnvironmentObject var appStore: AppStore
     @EnvironmentObject var appSettings: AppSettings
 
     @State private var name: String = "Guest"
@@ -161,5 +160,4 @@ struct MenuView: View {
 #Preview {
     MenuView()
         .environmentObject(AppSettings())
-        .environmentObject(AppStore())
 }

@@ -1,6 +1,15 @@
 import SwiftUI
 import OpenAISwift
 
+// Optionally, if you store your API key in Info.plist or a global variable,
+// you might have something like this in GlobalVariables.swift:
+// let openAIApiKey: String = {
+//     Bundle.main.object(forInfoDictionaryKey: "OpenAIAPIKey") as? String ?? ""
+// }()
+
+// For simplicity in this example, we'll define it here:
+let openAIApiKey = "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" // Replace with your actual valid key
+
 struct HelpBot: View {
     @EnvironmentObject var appSettings: AppSettings
 
@@ -8,18 +17,11 @@ struct HelpBot: View {
     @State private var response: String = ""
     @State private var isLoading: Bool = false
 
-
- let openAI = OpenAISwift(config: OpenAISwift.Config.makeDefaultOpenAI(apiKey: "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"))
-
     // Translated UI strings
     @State private var placeholderText: String = "Enter your request"
     @State private var sendButtonText: String = "Send"
     @State private var defaultResponseText: String = "Response will appear here"
     @State private var loadingText: String = "Loading..."
-
-    let openAI = OpenAISwift(config: OpenAISwift.Config.makeDefaultOpenAI(
-        apiKey: "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"))
-
 
     var body: some View {
         Group {
@@ -74,6 +76,7 @@ struct HelpBot: View {
         }
         .padding()
         .task {
+            // Load translated UI strings based on selected language
             placeholderText = await TranslationTool(text: "Enter your request", targetLanguage: appSettings.selectedLanguage)
             sendButtonText = await TranslationTool(text: "Send", targetLanguage: appSettings.selectedLanguage)
             defaultResponseText = await TranslationTool(text: "Response will appear here", targetLanguage: appSettings.selectedLanguage)
@@ -81,21 +84,54 @@ struct HelpBot: View {
         }
     }
 
+    // Use a direct URLSession call to access the chat completions endpoint for GPT-4 Turbo
     func sendMessage() async {
+        guard let url = URL(string: "https://api.openai.com/v1/chat/completions") else {
+            response = "Invalid API URL."
+            return
+        }
+        
+        let headers = [
+            "Content-Type": "application/json",
+            "Authorization": "Bearer \(openAIApiKey)"
+        ]
+        
+        let body: [String: Any] = [
+            "model": "gpt-4-turbo",  // Using GPT-4 Turbo ("Mini")
+            "messages": [
+                ["role": "user", "content": prompt]
+            ],
+            "max_tokens": 50,
+            "temperature": 0.7
+        ]
+        
         do {
-            let result = try await openAI.sendCompletion(
-                with: prompt,
-                model: .gpt3(.davinci),
-                maxTokens: 16,
-                temperature: 1
-            )
-            if let text = result.choices?.first?.text {
-                response = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            let requestData = try JSONSerialization.data(withJSONObject: body, options: [])
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.allHTTPHeaderFields = headers
+            request.httpBody = requestData
+
+            let (data, _) = try await URLSession.shared.data(for: request)
+            
+            // Debug: Print the raw JSON response
+            if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                print("DEBUG - Chat completion result: \(json)")
+                
+                if let choices = json["choices"] as? [[String: Any]],
+                   let firstChoice = choices.first,
+                   let message = firstChoice["message"] as? [String: Any],
+                   let text = message["content"] as? String {
+                    response = text.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                } else {
+                    response = "No response found in OpenAI reply."
+                }
             } else {
-                response = "No response found."
+                response = "Invalid response format."
             }
         } catch {
-            response = "An error occurred."
+            print("OpenAI chat error: \(error.localizedDescription)")
+            response = "An error occurred: \(error.localizedDescription)"
         }
     }
 }

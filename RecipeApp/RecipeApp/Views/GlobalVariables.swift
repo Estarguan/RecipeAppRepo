@@ -9,6 +9,7 @@ let googleTranslateAPIKey: String = {
 // Shared app-wide settings for language, etc.
 class AppSettings: ObservableObject {
     @Published var selectedLanguage: String = "en"
+    
 }
 
 // Create a shared instance of AppSettings
