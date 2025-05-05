@@ -7,8 +7,7 @@ import OpenAISwift
 //     Bundle.main.object(forInfoDictionaryKey: "OpenAIAPIKey") as? String ?? ""
 // }()
 
-// For simplicity in this example, we'll define it here:
-let openAIApiKey = "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" // Replace with your actual valid key
+let openAIApiKey = "Add api key here"
 
 struct HelpBot: View {
     @EnvironmentObject var appSettings: AppSettings
@@ -90,21 +89,26 @@ struct HelpBot: View {
             response = "Invalid API URL."
             return
         }
-        
+
         let headers = [
             "Content-Type": "application/json",
             "Authorization": "Bearer \(openAIApiKey)"
         ]
-        
+
+        let systemPrompt = """
+        You are a friendly human assistant helping Canadian immigrants. Only answer relevant immigration or government questions and say you can't help otherwise. Always respond in the language of the prompt.
+        """
+
         let body: [String: Any] = [
-            "model": "gpt-4-turbo",  // Using GPT-4 Turbo ("Mini")
+            "model": "gpt-4-turbo",
             "messages": [
+                ["role": "system", "content": systemPrompt],
                 ["role": "user", "content": prompt]
             ],
-            "max_tokens": 50,
+            "max_tokens": 350,
             "temperature": 0.7
         ]
-        
+
         do {
             let requestData = try JSONSerialization.data(withJSONObject: body, options: [])
             var request = URLRequest(url: url)
@@ -113,27 +117,22 @@ struct HelpBot: View {
             request.httpBody = requestData
 
             let (data, _) = try await URLSession.shared.data(for: request)
-            
-            // Debug: Print the raw JSON response
-            if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                print("DEBUG - Chat completion result: \(json)")
-                
-                if let choices = json["choices"] as? [[String: Any]],
-                   let firstChoice = choices.first,
-                   let message = firstChoice["message"] as? [String: Any],
-                   let text = message["content"] as? String {
-                    response = text.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-                } else {
-                    response = "No response found in OpenAI reply."
-                }
+
+            if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let choices = json["choices"] as? [[String: Any]],
+               let firstChoice = choices.first,
+               let message = firstChoice["message"] as? [String: Any],
+               let text = message["content"] as? String {
+                response = text.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
             } else {
-                response = "Invalid response format."
+                response = "No response found in OpenAI reply."
             }
         } catch {
             print("OpenAI chat error: \(error.localizedDescription)")
             response = "An error occurred: \(error.localizedDescription)"
         }
     }
+
 }
 
 #Preview {

@@ -11,6 +11,7 @@ struct MenuView: View {
     @State private var signInText: String = "Sign in?"
     @State private var addFormText: String = "+ Add Form"
     @State private var extraHelpText: String = "Extra Help"
+    @State private var changeLanguageText: String = "Change Language"
 
     var body: some View {
         NavigationStack {
@@ -18,10 +19,20 @@ struct MenuView: View {
                 Color("ColorLightGray")
                     .edgesIgnoringSafeArea(.all)
 
-                // Top-right language display
+                // Top bar with Change Language
                 VStack {
                     HStack {
+                        NavigationLink(destination: AuthenticationView()) {
+                            Text(changeLanguageText)
+                                .font(.footnote)
+                                .fontWeight(.medium)
+                                .foregroundColor(.white)
+                                .padding(.leading, 20)
+                                .padding(.top, 60)
+                        }
+
                         Spacer()
+
                         let locale = Locale(identifier: appSettings.selectedLanguage)
                         Text(locale.localizedString(forLanguageCode: appSettings.selectedLanguage)?
                             .capitalized ?? appSettings.selectedLanguage)
@@ -153,6 +164,7 @@ struct MenuView: View {
             signInText = await TranslationTool(text: "Sign in?", targetLanguage: appSettings.selectedLanguage)
             addFormText = await TranslationTool(text: "+ Add Form", targetLanguage: appSettings.selectedLanguage)
             extraHelpText = await TranslationTool(text: "Extra Help", targetLanguage: appSettings.selectedLanguage)
+            changeLanguageText = await TranslationTool(text: "Change Language", targetLanguage: appSettings.selectedLanguage)
         }
     }
 }
