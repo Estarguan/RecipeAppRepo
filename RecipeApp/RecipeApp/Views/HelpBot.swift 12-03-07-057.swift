@@ -8,7 +8,7 @@ import OpenAISwift
 // }()
 
 // For simplicity in this example, we'll define it here:
-let openAIApiKey = "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" // Replace with your actual valid key
+let openAIApiKey = "" // Replace with your actual valid key
 
 struct HelpBot: View {
     @EnvironmentObject var appSettings: AppSettings
