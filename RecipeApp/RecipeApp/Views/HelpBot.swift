@@ -107,29 +107,30 @@ struct HelpBot: View {
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            ZStack(alignment: .bottom) {
+            ZStack {
                 Color("ColorBlue")
                     .ignoresSafeArea(edges: .top)
-                HStack(spacing: 16) {
+                HStack(spacing: 24) {
                     Spacer(minLength: 0)
                     Text("Orion")
-                        .font(.system(size: 48, weight: .bold))
+                        .font(.system(size: 60, weight: .bold))
                         .foregroundColor(Color("ColorWhite"))
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
                     Image("Orion")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 56, height: 56)
+                        .frame(width: 80, height: 80)
                         .clipShape(Circle())
-                        .shadow(radius: 4)
+                        .shadow(radius: 6)
                     Spacer(minLength: 0)
                 }
-                .padding(.top, 4)
+                .padding(.top, 8)      // adjust for how close you want to the top
+                .padding(.bottom, 10)  // adjust this to move it off the bottom
             }
             .frame(height: 80)
             .shadow(radius: 2)
-            
+
             // Messages ScrollView
             ScrollViewReader { proxy in
                 ScrollView {
