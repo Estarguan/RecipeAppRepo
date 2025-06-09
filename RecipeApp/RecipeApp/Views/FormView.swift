@@ -9,7 +9,6 @@ struct GovernmentForm: Identifiable {
     let pdfFilename: String // just the name, no ".pdf"
 }
 
-// The raw (untranslated) form data
 let rawForms: [GovernmentForm] = [
     GovernmentForm(
         name: "SIN Application",
@@ -19,13 +18,13 @@ let rawForms: [GovernmentForm] = [
     ),
     GovernmentForm(
         name: "PPTC 153",
-        description: "Child General Passport Application.",
+        description: "Adult General Passport Application.",
         iconName: "doc.text",
         pdfFilename: "PPTC153"
     ),
     GovernmentForm(
         name: "PPTC 155",
-        description: "Statutory Declaration in Lieu of Guarantor.",
+        description: "Child General Passport Application.",
         iconName: "doc.richtext",
         pdfFilename: "PPTC155"
     ),
@@ -48,6 +47,12 @@ struct FormView: View {
 
     @State private var searchText = ""
     @State private var showingFormDetail: GovernmentForm? = nil
+
+    // Sheet states for PDF presentation
+    @State private var showingPDF: Bool = false
+    @State private var selectedPDFUrl: URL? = nil
+    @State private var selectedForm: GovernmentForm? = nil
+    @State private var annotations: [PDFAnnotationGuide] = []
 
     // Translatable UI strings
     @State private var popularFormsTitle = "Popular Forms"
@@ -127,9 +132,28 @@ struct FormView: View {
             }
             .navigationTitle(addFormNavTitle)
             .background(Color("ColorLightGray").ignoresSafeArea())
+            // Present FormDetailView as a sheet
             .sheet(item: $showingFormDetail) { form in
-                FormDetailView(form: form)
-                    .environmentObject(appSettings)
+                FormDetailView(form: form) { url in
+                    showingFormDetail = nil
+                    // After a brief delay, present the PDF sheet with annotations
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        selectedPDFUrl = url
+                        selectedForm = form
+                        Task {
+                            // Load translated annotations for this form
+                            annotations = await annotationGuides(for: form, language: appSettings.selectedLanguage)
+                            showingPDF = true
+                        }
+                    }
+                }
+                .environmentObject(appSettings)
+            }
+            // Present PDFOptionsView from the parent
+            .sheet(isPresented: $showingPDF) {
+                if let url = selectedPDFUrl {
+                    PDFOptionsView(pdfURL: url, annotations: annotations)
+                }
             }
         }
         .task {
@@ -177,7 +201,47 @@ struct FormView: View {
     }
 }
 
-// MARK: PDFKitView
+// MARK: - PDF Annotation Overlay Data
+struct PDFAnnotationGuide: Identifiable {
+    let id = UUID()
+    let page: Int
+    let x: CGFloat    // 0.0 - 1.0 (relative horizontal position)
+    let y: CGFloat    // 0.0 - 1.0 (relative vertical position)
+    let text: String  // Explanation text (translated)
+}
+
+// Only add annotations to PPTC 153
+func annotationGuides(for form: GovernmentForm, language: String) async -> [PDFAnnotationGuide] {
+    guard form.pdfFilename == "PPTC153" else { return [] }
+    // Example: These are sample annotations, adjust (page, x, y, text) for your needs.
+    let annotation1 = PDFAnnotationGuide(
+        page: 0,
+        x: 0.25, y: 0.15,
+        text: await TranslationTool(
+            text: "This section is for the applicant's surname (last name).",
+            targetLanguage: language
+        )
+    )
+    let annotation2 = PDFAnnotationGuide(
+        page: 0,
+        x: 0.60, y: 0.38,
+        text: await TranslationTool(
+            text: "Place your signature in the box.",
+            targetLanguage: language
+        )
+    )
+    let annotation3 = PDFAnnotationGuide(
+        page: 0,
+        x: 0.45, y: 0.80,
+        text: await TranslationTool(
+            text: "Make sure to provide your date of birth in the format YYYY-MM-DD.",
+            targetLanguage: language
+        )
+    )
+    return [annotation1, annotation2, annotation3]
+}
+
+// MARK: PDFKitView (no annotation logic here; overlay is in parent)
 struct PDFKitView: UIViewRepresentable {
     let url: URL
 
@@ -191,7 +255,8 @@ struct PDFKitView: UIViewRepresentable {
     }
 
     func updateUIView(_ pdfView: PDFView, context: Context) {
-        pdfView.document = PDFDocument(url: url)
+        let doc = PDFDocument(url: url)
+        pdfView.document = doc
     }
 }
 
@@ -200,8 +265,7 @@ struct FormDetailView: View {
     @EnvironmentObject var appSettings: AppSettings
 
     let form: GovernmentForm
-    @State private var showPDF = false
-    @State private var pdfURL: URL? = nil
+    var onViewPDF: ((URL) -> Void)?
 
     // Translatable UI strings
     @State private var viewPDFText = "View PDF"
@@ -224,8 +288,7 @@ struct FormDetailView: View {
 
             if let url = Bundle.main.url(forResource: form.pdfFilename, withExtension: "pdf") {
                 Button(action: {
-                    pdfURL = url
-                    showPDF = true
+                    onViewPDF?(url)
                 }) {
                     HStack {
                         Image(systemName: "doc.richtext")
@@ -235,11 +298,6 @@ struct FormDetailView: View {
                     .foregroundColor(.white)
                     .background(Color("ColorBlue"))
                     .cornerRadius(12)
-                }
-                .sheet(isPresented: $showPDF) {
-                    if let url = pdfURL {
-                        PDFOptionsView(pdfURL: url)
-                    }
                 }
             } else {
                 Text(pdfNotAvailableText)
@@ -261,10 +319,13 @@ struct FormDetailView: View {
     }
 }
 
-// MARK: PDFOptionsView
+// MARK: PDFOptionsView with Annotation Overlay
 struct PDFOptionsView: View {
     let pdfURL: URL
+    var annotations: [PDFAnnotationGuide] = []
     @Environment(\.dismiss) private var dismiss
+
+    @State private var showingPopover: PDFAnnotationGuide? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -281,8 +342,36 @@ struct PDFOptionsView: View {
                 }
             }
             .background(Color(.systemBackground).opacity(0.96))
-            PDFKitView(url: pdfURL)
-                .edgesIgnoringSafeArea(.all)
+            ZStack(alignment: .topLeading) {
+                PDFKitView(url: pdfURL)
+                    .edgesIgnoringSafeArea(.all)
+                GeometryReader { geo in
+                    ForEach(annotations) { ann in
+                        // Only display annotations for the first page for now.
+                        // If supporting multipage: check which page is visible in PDFView (advanced)
+                        if ann.page == 0 {
+                            Button(action: { showingPopover = ann }) {
+                                Image(systemName: "info.circle.fill")
+                                    .font(.system(size: 30, weight: .bold))
+                                    .foregroundColor(.blue)
+                                    .background(Color.white.opacity(0.9))
+                                    .clipShape(Circle())
+                            }
+                            .position(
+                                x: geo.size.width * ann.x,
+                                y: geo.size.height * ann.y
+                            )
+                        }
+                    }
+                }
+                .popover(item: $showingPopover) { ann in
+                    Text(ann.text)
+                        .padding()
+                        .background(Color.yellow.opacity(0.9))
+                        .cornerRadius(12)
+                        .frame(maxWidth: 250)
+                }
+            }
         }
     }
 }
