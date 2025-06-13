@@ -72,7 +72,7 @@ class SpeechSynthesizerManager: ObservableObject {
     }
 }
 
-let openAIApiKey = "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"
+let openAIApiKey = "ADD API KEY HERE"
 
 struct HelpBot: View {
     @EnvironmentObject var appSettings: AppSettings

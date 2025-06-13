@@ -1,10 +1,14 @@
 import SwiftUI
 
+struct Profile2: Decodable {
+    let full_name: String?
+}
+
 struct MenuView: View {
     @EnvironmentObject var appSettings: AppSettings
 
-    @State private var name: String = "Guest"
     @State private var isAuthenticated = false
+    @State private var userFullName: String? = nil   // <--- Store user name here
 
     // Translated text states
     @State private var greetingStart: String = "Hello, "
@@ -12,6 +16,15 @@ struct MenuView: View {
     @State private var addFormText: String = "+ Add Form"
     @State private var extraHelpText: String = "Extra Help"
     @State private var changeLanguageText: String = "Change Language"
+    @State private var guestText: String = "Guest" // Store the translated "Guest"
+
+    var displayedName: String {
+        if isAuthenticated, let userFullName, !userFullName.isEmpty {
+            return userFullName
+        } else {
+            return guestText
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -86,7 +99,7 @@ struct MenuView: View {
                         .truncationMode(.tail)
                         .padding(.leading, 20)
 
-                    Text(name)
+                    Text(displayedName) // <-- Use computed var
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(Color("ColorWhite"))
@@ -153,18 +166,62 @@ struct MenuView: View {
             }
         }
         .task {
+            // Auth state handling
             for await state in supabase.auth.authStateChanges {
                 if [.initialSession, .signedIn, .signedOut].contains(state.event) {
                     isAuthenticated = state.session != nil
+                    if isAuthenticated, let user = state.session?.user {
+                        await fetchUserName(for: user.id)
+                    } else {
+                        await MainActor.run { userFullName = nil }
+                    }
                 }
             }
         }
         .task {
+            // Translate only UI text, not the user's name!
             greetingStart = await TranslationTool(text: "Hello, ", targetLanguage: appSettings.selectedLanguage)
             signInText = await TranslationTool(text: "Sign in?", targetLanguage: appSettings.selectedLanguage)
             addFormText = await TranslationTool(text: "+ Add Form", targetLanguage: appSettings.selectedLanguage)
             extraHelpText = await TranslationTool(text: "Extra Help", targetLanguage: appSettings.selectedLanguage)
             changeLanguageText = await TranslationTool(text: "Change Language", targetLanguage: appSettings.selectedLanguage)
+            guestText = await TranslationTool(text: "Guest", targetLanguage: appSettings.selectedLanguage)
+        }
+        .onChange(of: appSettings.selectedLanguage) { _ in
+            // When language changes, update translations, but do not overwrite user's name!
+            Task {
+                greetingStart = await TranslationTool(text: "Hello, ", targetLanguage: appSettings.selectedLanguage)
+                signInText = await TranslationTool(text: "Sign in?", targetLanguage: appSettings.selectedLanguage)
+                addFormText = await TranslationTool(text: "+ Add Form", targetLanguage: appSettings.selectedLanguage)
+                extraHelpText = await TranslationTool(text: "Extra Help", targetLanguage: appSettings.selectedLanguage)
+                changeLanguageText = await TranslationTool(text: "Change Language", targetLanguage: appSettings.selectedLanguage)
+                guestText = await TranslationTool(text: "Guest", targetLanguage: appSettings.selectedLanguage)
+            }
+        }
+    }
+
+    // Fetch user full name from Supabase
+    func fetchUserName(for userId: UUID) async {
+        do {
+            let response = try await supabase
+                .from("profiles")
+                .select("full_name")
+                .eq("id", value: userId.uuidString)
+                .single()
+                .execute()
+
+            let data = response.data
+
+            let profile = try JSONDecoder().decode(Profile2.self, from: data)
+            let fullName = profile.full_name ?? ""
+
+            await MainActor.run {
+                self.userFullName = fullName
+            }
+        } catch {
+            await MainActor.run {
+                self.userFullName = nil
+            }
         }
     }
 }

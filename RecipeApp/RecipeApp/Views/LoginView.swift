@@ -51,30 +51,47 @@ struct LoginView: View {
 
                     Spacer()
 
-                    // Email field
-                    TextField(emailPlaceholder, text: $email)
-                        .padding()
-                        .background(LinearGradient(
-                            gradient: Gradient(colors: [Color("ColorBlue"), Color("ColorWhite")]),
-                            startPoint: .leading,
-                            endPoint: .trailing))
-                        .cornerRadius(25)
-                        .foregroundColor(Color("ColorBlack"))
-                        .padding(.horizontal, 30)
-                        .autocapitalization(.none)
+                    // Email field with bold placeholder and bold border
+                    ZStack(alignment: .leading) {
+                        if email.isEmpty {
+                            Text(emailPlaceholder)
+                                .foregroundColor(.gray)
+                                .fontWeight(.bold)
+                                .padding(.leading, 18)
+                        }
+                        TextField("", text: $email)
+                            .padding()
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(Color("ColorBlack"))
+                            .autocapitalization(.none)
+                    }
+                    .background(
+                        RoundedRectangle(cornerRadius: 25)
+                            .stroke(Color("ColorBlue"), lineWidth: 3)
+                    )
+                    .padding(.horizontal, 30)
+                    .padding(.top, 10)
 
-                    // Password field
-                    SecureField(passwordPlaceholder, text: $password)
-                        .padding()
-                        .background(LinearGradient(
-                            gradient: Gradient(colors: [Color("ColorBlue"), Color("ColorWhite")]),
-                            startPoint: .leading,
-                            endPoint: .trailing))
-                        .cornerRadius(25)
-                        .foregroundColor(Color("ColorWhite"))
-                        .padding(.horizontal, 30)
-                        .padding(.top, 20)
-                        .autocapitalization(.none)
+                    // Password field with bold placeholder and bold border
+                    ZStack(alignment: .leading) {
+                        if password.isEmpty {
+                            Text(passwordPlaceholder)
+                                .foregroundColor(.gray)
+                                .fontWeight(.bold)
+                                .padding(.leading, 18)
+                        }
+                        SecureField("", text: $password)
+                            .padding()
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(Color("ColorBlack"))
+                            .autocapitalization(.none)
+                    }
+                    .background(
+                        RoundedRectangle(cornerRadius: 25)
+                            .stroke(Color("ColorBlue"), lineWidth: 3)
+                    )
+                    .padding(.horizontal, 30)
+                    .padding(.top, 20)
 
                     Spacer()
 
